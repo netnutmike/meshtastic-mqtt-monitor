@@ -335,13 +335,26 @@ class MessageDecoder:
         # msh/REGION/CHANNEL_NUM/TYPE/CHANNEL_NAME[/extra/path] (5+ parts)
         # msh/REGION/AREA/NETWORK/CHANNEL_NUM/TYPE/CHANNEL_NAME[/extra/path] (7+ parts)
         
-        # Find the type indicator (e, c, json, stat) and get the next part
+        # Find the type indicator (e, c, json, stat, map) and get the next part
         for i, part in enumerate(parts):
             if part in ['e', 'c', 'json', 'stat']:
                 # Channel name is the part right after the type
                 if i + 1 < len(parts):
                     return parts[i + 1]
                 break
+            elif part == 'map':
+                # For map reports, if there's a part after 'map', use it
+                # Otherwise, look for the channel name before the channel number
+                if i + 1 < len(parts):
+                    return parts[i + 1]
+                # Try to find channel name before the number (e.g., msh/US/FL/thevillages/2/map)
+                # The pattern is usually: msh/REGION/AREA/NETWORK/NUM/map
+                # So we want the NETWORK part (parts[3] in this case)
+                if i >= 2 and parts[i-1].isdigit():
+                    # The part before the number might be the network/channel name
+                    if i >= 3:
+                        return parts[i-2]  # Get the part before the channel number
+                return "map"  # Fallback to "map" as the channel name
         
         # Fallback: try to get a reasonable channel identifier
         if len(parts) >= 5:
@@ -415,6 +428,8 @@ class MessageDecoder:
                 fields = self._extract_telemetry_fields(payload)
             elif packet_type == "NODEINFO_APP":
                 fields = self._extract_nodeinfo_fields(payload)
+            elif packet_type == "NEIGHBORINFO_APP":
+                fields = self._extract_neighborinfo_fields(payload)
             else:
                 # For unknown types, just show raw payload info
                 fields["payload_size"] = len(payload)
@@ -533,6 +548,45 @@ class MessageDecoder:
                 
         except Exception as e:
             logger.debug(f"Error parsing nodeinfo: {e}")
+            fields["parse_error"] = str(e)
+        
+        return fields
+
+    def _extract_neighborinfo_fields(self, payload: bytes) -> Dict[str, Any]:
+        """Extract fields from NEIGHBORINFO_APP packet."""
+        fields = {}
+        
+        try:
+            neighbor_info = mesh_pb2.NeighborInfo()
+            neighbor_info.ParseFromString(payload)
+            
+            if neighbor_info.node_id != 0:
+                fields["node_id"] = f"!{neighbor_info.node_id:08x}"
+            
+            if neighbor_info.last_sent_by_id != 0:
+                fields["last_sent_by"] = f"!{neighbor_info.last_sent_by_id:08x}"
+            
+            if neighbor_info.node_broadcast_interval_secs != 0:
+                fields["broadcast_interval"] = f"{neighbor_info.node_broadcast_interval_secs}s"
+            
+            # Extract neighbor list
+            if len(neighbor_info.neighbors) > 0:
+                neighbors_list = []
+                for neighbor in neighbor_info.neighbors:
+                    neighbor_data = {}
+                    if neighbor.node_id != 0:
+                        neighbor_data["id"] = f"!{neighbor.node_id:08x}"
+                    if neighbor.snr != 0:
+                        neighbor_data["snr"] = f"{neighbor.snr:.1f}dB"
+                    if neighbor.last_rx_time != 0:
+                        neighbor_data["last_rx"] = f"{neighbor.last_rx_time}s ago"
+                    neighbors_list.append(neighbor_data)
+                
+                fields["neighbor_count"] = len(neighbors_list)
+                fields["neighbors"] = str(neighbors_list)  # Convert to string for display
+                
+        except Exception as e:
+            logger.debug(f"Error parsing neighborinfo: {e}")
             fields["parse_error"] = str(e)
         
         return fields

@@ -68,21 +68,50 @@ class MessageDecoder:
             DecodedMessage object with decoded information
         """
         try:
-            # Parse ServiceEnvelope
+            # Check if payload is JSON (some MQTT messages are JSON, not protobuf)
+            if payload.startswith(b'{') or payload.startswith(b'['):
+                logger.debug(f"Skipping JSON message on topic {mqtt_topic}")
+                return DecodedMessage(
+                    packet_type="JSON_MESSAGE",
+                    channel=self._extract_channel_from_topic(mqtt_topic),
+                    from_node="unknown",
+                    to_node="unknown",
+                    timestamp=datetime.now(),
+                    fields={"note": "JSON messages not yet supported"},
+                    raw_data=payload,
+                    decryption_success=True,
+                )
+            
+            # Try to parse as ServiceEnvelope first
             envelope = mqtt_pb2.ServiceEnvelope()
+            mesh_packet = None
+            
             try:
-                envelope.ParseFromString(payload)
+                bytes_parsed = envelope.ParseFromString(payload)
+                logger.debug(f"Successfully parsed {bytes_parsed} bytes as ServiceEnvelope")
+                # Check if envelope has a packet
+                if envelope.HasField("packet"):
+                    mesh_packet = envelope.packet
+                else:
+                    logger.debug("ServiceEnvelope has no packet field, trying direct MeshPacket parse")
             except Exception as parse_error:
-                logger.error(f"Failed to parse ServiceEnvelope: {parse_error}")
-                logger.debug(f"Payload length: {len(payload)} bytes")
-                logger.debug(f"Payload (first 100 bytes): {payload[:100].hex()}")
-                raise ValueError(f"Error parsing message with type 'meshtastic.protobuf.ServiceEnvelope': {parse_error}")
+                logger.debug(f"Failed to parse as ServiceEnvelope: {parse_error}, trying direct MeshPacket")
+            
+            # If ServiceEnvelope didn't work, try parsing directly as MeshPacket
+            if mesh_packet is None:
+                try:
+                    mesh_packet = mesh_pb2.MeshPacket()
+                    mesh_packet.ParseFromString(payload)
+                    logger.debug("Successfully parsed as direct MeshPacket")
+                except Exception as packet_error:
+                    logger.error(f"Failed to parse as both ServiceEnvelope and MeshPacket")
+                    logger.error(f"Topic: {mqtt_topic}")
+                    logger.error(f"Payload length: {len(payload)} bytes")
+                    logger.error(f"Payload (first 100 bytes hex): {payload[:min(100, len(payload))].hex()}")
+                    raise ValueError(f"Could not parse message as ServiceEnvelope or MeshPacket: {packet_error}")
             
             # Extract channel from topic (e.g., "msh/US/2/e/LongFast" -> "LongFast")
             channel = self._extract_channel_from_topic(mqtt_topic)
-            
-            # Get the MeshPacket
-            mesh_packet = envelope.packet
             
             # Determine if we need to decrypt
             data_msg = None

@@ -113,7 +113,7 @@ meshtastic-monitor [OPTIONS]
 #### Example 1: Monitor Public Meshtastic Server
 
 ```bash
-# Uses default configuration (mqtt.thevillages.com)
+# Uses default configuration (mqtt.villagesmesh.com)
 meshtastic-monitor
 ```
 
@@ -160,7 +160,7 @@ See `config.example.yaml` for a comprehensive example with all available options
 version: "1.0"
 
 mqtt:
-  host: "mqtt.thevillages.com"
+  host: "mqtt.villagesmesh.com"
   port: 1883
   username: "meshdev"
   password: "large4cats"
@@ -307,7 +307,7 @@ The monitor supports the following Meshtastic packet types:
 - Try with `--use-tls` if the broker requires TLS (usually port 8883)
 - Test connection with a simple MQTT client like `mosquitto_sub`:
   ```bash
-  mosquitto_sub -h mqtt.thevillages.com -p 1883 -u meshdev -P large4cats -t "msh/#" -v
+  mosquitto_sub -h mqtt.villagesmesh.com -p 1883 -u meshdev -P large4cats -t "msh/#" -v
   ```
 
 **Problem**: Authentication failed

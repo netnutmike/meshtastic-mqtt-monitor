@@ -63,6 +63,7 @@ class MeshtasticMonitor:
                 self.config.colors,
                 self.config.display_fields,
                 self.config.keywords,
+                self.config.hardware_models,
             )
             
             # Initialize MQTT client
@@ -145,8 +146,20 @@ class MeshtasticMonitor:
             # Decode the message
             decoded_message = self.decoder.decode(topic, payload)
             
+            # Apply filters if configured
+            if self.config.filter_type:
+                # Filter by packet type
+                if decoded_message.packet_type != self.config.filter_type:
+                    return  # Skip this message
+            
             # Format the message
             formatted_output = self.formatter.format_message(decoded_message)
+            
+            # Apply text filter if configured
+            if self.config.filter_text:
+                # Case-insensitive search in the formatted output
+                if self.config.filter_text.lower() not in formatted_output.lower():
+                    return  # Skip this message
             
             # Display the formatted message
             print(formatted_output)
@@ -176,6 +189,12 @@ class MeshtasticMonitor:
         
         if self.config.keywords:
             print(f"Keyword highlights: {len(self.config.keywords)} configured")
+        
+        # Display active filters
+        if self.config.filter_type:
+            print(f"Filter: Only showing {self.config.filter_type} messages")
+        if self.config.filter_text:
+            print(f"Filter: Only showing messages containing '{self.config.filter_text}'")
         
         print("="*80 + "\n")
     

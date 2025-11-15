@@ -8,11 +8,100 @@ from typing import Dict, List, Optional
 import yaml
 
 
+# Hardware model mapping (number to name)
+# Based on Meshtastic protobuf HardwareModel enum
+HARDWARE_MODELS = {
+    0: "UNSET",
+    1: "TLORA_V2",
+    2: "TLORA_V1",
+    3: "TLORA_V2_1_1P6",
+    4: "TBEAM",
+    5: "HELTEC_V2_0",
+    6: "TBEAM_V0P7",
+    7: "T_ECHO",
+    8: "TLORA_V1_1P3",
+    9: "RAK4631",
+    10: "HELTEC_V2_1",
+    11: "HELTEC_V1",
+    12: "LILYGO_TBEAM_S3_CORE",
+    13: "RAK11200",
+    14: "NANO_G1",
+    15: "TLORA_V2_1_1P8",
+    16: "TLORA_T3_S3",
+    17: "NANO_G1_EXPLORER",
+    18: "NANO_G2_ULTRA",
+    19: "LORA_TYPE",
+    20: "WIPHONE",
+    21: "WIO_WM1110",
+    22: "RAK11310",
+    23: "SENSELORA_RP2040",
+    24: "SENSELORA_S3",
+    25: "CANARYONE",
+    26: "RP2040_LORA",
+    27: "STATION_G1",
+    28: "RAK11310_EPAPER",
+    29: "T_DECK",
+    30: "T_WATCH_S3",
+    31: "PICOMPUTER_S3",
+    32: "HELTEC_V3",
+    33: "HELTEC_WSL_V3",
+    34: "BETAFPV_2400_TX",
+    35: "BETAFPV_900_NANO_TX",
+    36: "RPI_PICO",
+    37: "HELTEC_WIRELESS_TRACKER",
+    38: "HELTEC_WIRELESS_PAPER",
+    39: "T_BEAM_SUPREME",
+    40: "UNPHONE",
+    41: "TD_LORAC",
+    42: "CDEBYTE_EORA_S3",
+    43: "TWC_MESH_V4",
+    44: "NRF52840_PCA10059",
+    45: "NRF52_UNKNOWN",
+    46: "PORTDUINO",
+    47: "ANDROID_SIM",
+    48: "DIY_V1",
+    49: "NRF52840_DK",
+    50: "NRF52840_PPR",
+    51: "GENIEBLOCKS",
+    52: "NRF52_PROMICRO_DIY",
+    53: "RADIOMASTER_900_BANDIT_NANO",
+    54: "HELTEC_CAPSULE_SENSOR_V3",
+    55: "HELTEC_VISION_MASTER_T190",
+    56: "HELTEC_VISION_MASTER_E213",
+    57: "HELTEC_VISION_MASTER_E290",
+    58: "HELTEC_MESH_NODE_T114",
+    59: "SENSECAP_INDICATOR",
+    60: "TRACKER_T1000_E",
+    61: "RAK3172",
+    62: "WIO_E5",
+    63: "RADIOMASTER_900_BANDIT",
+    64: "ME25LS01_4Y10TD",
+    65: "RP2040_FEATHER_RFM95",
+    66: "M5STACK_COREBASIC",
+    67: "M5STACK_CORE2",
+    68: "RPI_PICO2",
+    69: "M5STACK_CORES3",
+    70: "SEEED_XIAO_S3",
+    71: "BETAFPV_2400_RX",
+    72: "HELTEC_WT32",
+    73: "ESP32_S3_PICO",
+    74: "CHATTER_2",
+    75: "HELTEC_WIRELESS_PAPER_V1_0",
+    76: "HELTEC_PRO_V1_0",
+    77: "SEEED_SENSECAP_CARD_TRACKER",
+    78: "HELTEC_WIRELESS_TRACKER_V1_0",
+    79: "EBYTE_E22_MBL_01",
+    80: "HELTEC_WIRELESS_PAPER_V1_1",
+    81: "PRIVATE_HW",
+    255: "RESERVED",
+}
+
+
 @dataclass
 class MQTTConfig:
     """MQTT broker connection configuration."""
 
-    host: str = "mqtt.thevillages.com"
+    host: str = "mqtt.villagesmesh.com"
     port: int = 1883
     username: Optional[str] = "meshdev"
     password: Optional[str] = "large4cats"
@@ -64,6 +153,9 @@ class MonitorConfig:
     display_fields: Dict[str, List[str]] = field(default_factory=dict)
     colors: ColorConfig = field(default_factory=ColorConfig)
     keywords: List[KeywordConfig] = field(default_factory=list)
+    hardware_models: Dict[int, str] = field(default_factory=lambda: HARDWARE_MODELS.copy())
+    filter_type: Optional[str] = None  # Filter to specific packet type
+    filter_text: Optional[str] = None  # Filter messages containing text (grep-like)
 
 
 class ConfigManager:
@@ -155,6 +247,11 @@ class ConfigManager:
         # Build keyword highlights dict from keywords list
         config.colors.keyword_highlights = {kw.keyword: kw.color for kw in config.keywords}
         
+        # Set default encryption keys for common channels
+        config.channel_keys = {
+            "LongFast": "AQ==",  # Default Meshtastic encryption key
+        }
+        
         return config
 
     @staticmethod
@@ -200,7 +297,7 @@ class ConfigManager:
         # Parse MQTT configuration
         mqtt_data = config_data.get("mqtt", {})
         mqtt_config = MQTTConfig(
-            host=mqtt_data.get("host", "mqtt.thevillages.com"),
+            host=mqtt_data.get("host", "mqtt.villagesmesh.com"),
             port=mqtt_data.get("port", 1883),
             username=mqtt_data.get("username", "meshdev"),
             password=mqtt_data.get("password", "large4cats"),
@@ -422,6 +519,12 @@ class ConfigManager:
                                 kw.color = color
                                 break
         
+        # Handle filter options
+        if hasattr(args, "filter_type") and args.filter_type:
+            config.filter_type = args.filter_type
+        if hasattr(args, "filter_text") and args.filter_text:
+            config.filter_text = args.filter_text
+        
         return config
 
     @staticmethod
@@ -451,6 +554,15 @@ Examples:
   
   # Add keyword highlighting
   meshtastic-monitor --highlight emergency:red_bold --highlight test:cyan
+  
+  # Filter to only show text messages
+  meshtastic-monitor --filter-type TEXT_MESSAGE_APP
+  
+  # Filter to only show messages containing "weather"
+  meshtastic-monitor --filter-text weather
+  
+  # Combine filters: only position messages containing "checkpoint"
+  meshtastic-monitor --filter-type POSITION --filter-text checkpoint
             """,
         )
         
@@ -564,6 +676,21 @@ Examples:
             action="append",
             metavar="KEYWORD:COLOR",
             help="Add keyword highlighting (format: keyword:color, e.g., emergency:red_bold). Can be used multiple times.",
+        )
+        
+        # Filtering options
+        filter_group = parser.add_argument_group("Filtering")
+        filter_group.add_argument(
+            "--filter-type",
+            type=str,
+            metavar="TYPE",
+            help="Only show messages of specific packet type (e.g., TEXT_MESSAGE_APP, POSITION, TELEMETRY_APP)",
+        )
+        filter_group.add_argument(
+            "--filter-text",
+            type=str,
+            metavar="TEXT",
+            help="Only show messages containing specific text (case-insensitive grep-like filter)",
         )
         
         return parser

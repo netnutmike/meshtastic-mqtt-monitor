@@ -12,8 +12,8 @@ version: "1.0"
 # ============================================================================
 mqtt:
   # MQTT broker hostname or IP address
-  # Default: mqtt.thevillages.com (public Meshtastic MQTT server)
-  host: "mqtt.thevillages.com"
+  # Default: mqtt.villagesmesh.com (public Meshtastic MQTT server)
+  host: "mqtt.villagesmesh.com"
   
   # MQTT broker port
   # Default: 1883 (standard MQTT), 8883 (MQTT over TLS)

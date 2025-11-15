@@ -49,6 +49,7 @@ class TestEndToEndMessageFlow:
             config.colors,
             config.display_fields,
             config.keywords,
+            config.hardware_models,
         )
         
         # Create a test message
@@ -183,6 +184,7 @@ class TestEndToEndMessageFlow:
             config.colors,
             config.display_fields,
             config.keywords,
+            config.hardware_models,
         )
         
         # Create position message
@@ -277,6 +279,7 @@ colors:
             config.colors,
             config.display_fields,
             config.keywords,
+            config.hardware_models,
         )
         assert formatter is not None
     

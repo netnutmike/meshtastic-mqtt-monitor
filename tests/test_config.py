@@ -25,7 +25,7 @@ class TestMQTTConfig:
     def test_default_values(self):
         """Test that MQTTConfig has correct default values."""
         config = MQTTConfig()
-        assert config.host == "mqtt.thevillages.com"
+        assert config.host == "mqtt.villagesmesh.com"
         assert config.port == 1883
         assert config.username == "meshdev"
         assert config.password == "large4cats"
@@ -74,7 +74,7 @@ class TestConfigManager:
         config = ConfigManager.get_default_config()
         
         assert isinstance(config, MonitorConfig)
-        assert config.mqtt.host == "mqtt.thevillages.com"
+        assert config.mqtt.host == "mqtt.villagesmesh.com"
         assert config.mqtt.username == "meshdev"
         assert config.mqtt.password == "large4cats"
         assert config.topic == "msh/US/2/e/#"
@@ -99,7 +99,7 @@ class TestConfigManager:
             # Verify config was created
             assert os.path.exists(config_path)
             assert isinstance(config, MonitorConfig)
-            assert config.mqtt.host == "mqtt.thevillages.com"
+            assert config.mqtt.host == "mqtt.villagesmesh.com"
 
     def test_load_config_valid_yaml(self):
         """Test loading valid YAML configuration."""
@@ -186,7 +186,7 @@ class TestConfigManager:
             config = ConfigManager.load_config(config_path)
             
             # Should use defaults
-            assert config.mqtt.host == "mqtt.thevillages.com"
+            assert config.mqtt.host == "mqtt.villagesmesh.com"
             assert config.mqtt.username == "meshdev"
             assert config.mqtt.password == "large4cats"
 

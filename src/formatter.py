@@ -99,6 +99,7 @@ class OutputFormatter:
         color_config: ColorConfig,
         display_fields: Dict[str, List[str]],
         keywords: List[KeywordConfig],
+        hardware_models: Optional[Dict[int, str]] = None,
     ):
         """
         Initialize output formatter.
@@ -107,10 +108,12 @@ class OutputFormatter:
             color_config: Color configuration for packet types and keywords
             display_fields: Field display configuration per packet type
             keywords: Keyword highlighting configuration
+            hardware_models: Hardware model number to name mapping
         """
         self.color_config = color_config
         self.display_fields = display_fields
         self.keywords = keywords
+        self.hardware_models = hardware_models or {}
     
     def format_message(self, message: DecodedMessage) -> str:
         """
@@ -229,6 +232,11 @@ class OutputFormatter:
         Returns:
             Formatted value string
         """
+        # Handle hardware_model field specially
+        if field_name == "hardware_model" and isinstance(value, int):
+            hw_name = self.hardware_models.get(value, "UNKNOWN")
+            return f"{value} ({hw_name})"
+        
         # Handle different value types
         if isinstance(value, float):
             # Format floats with reasonable precision

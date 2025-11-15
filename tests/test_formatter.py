@@ -71,10 +71,12 @@ class TestOutputFormatter:
     @pytest.fixture
     def formatter(self, basic_color_config, basic_display_fields):
         """Create formatter instance."""
+        from src.config import HARDWARE_MODELS
         return OutputFormatter(
             color_config=basic_color_config,
             display_fields=basic_display_fields,
             keywords=[],
+            hardware_models=HARDWARE_MODELS,
         )
     
     def test_format_timestamp(self, formatter):
@@ -208,6 +210,7 @@ class TestOutputFormatter:
             color_config=color_config,
             display_fields={},
             keywords=keywords,
+            hardware_models={},
         )
         
         text = "This is an EMERGENCY situation"
@@ -229,6 +232,7 @@ class TestOutputFormatter:
             color_config=color_config,
             display_fields={},
             keywords=keywords,
+            hardware_models={},
         )
         
         text = "Alert: this is an alert message"
@@ -256,6 +260,7 @@ class TestOutputFormatter:
             color_config=color_config,
             display_fields={},
             keywords=keywords,
+            hardware_models={},
         )
         
         text = "error occurred, warning issued"

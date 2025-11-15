@@ -324,14 +324,29 @@ class MessageDecoder:
         Extract channel name from MQTT topic.
         
         Args:
-            topic: MQTT topic string (e.g., "msh/US/2/e/LongFast")
+            topic: MQTT topic string (e.g., "msh/US/2/e/LongFast" or "msh/US/FL/thevillages/2/e/LongFast")
             
         Returns:
-            Channel name, or "unknown" if not found
+            Channel name, or channel number if name not found
         """
         parts = topic.split("/")
+        
+        # Topic formats:
+        # msh/REGION/CHANNEL_NUM/TYPE/CHANNEL_NAME[/extra/path] (5+ parts)
+        # msh/REGION/AREA/NETWORK/CHANNEL_NUM/TYPE/CHANNEL_NAME[/extra/path] (7+ parts)
+        
+        # Find the type indicator (e, c, json, stat) and get the next part
+        for i, part in enumerate(parts):
+            if part in ['e', 'c', 'json', 'stat']:
+                # Channel name is the part right after the type
+                if i + 1 < len(parts):
+                    return parts[i + 1]
+                break
+        
+        # Fallback: try to get a reasonable channel identifier
         if len(parts) >= 5:
             return parts[4]
+        
         return "unknown"
 
     def _identify_packet_type(self, data_msg: mesh_pb2.Data) -> str:

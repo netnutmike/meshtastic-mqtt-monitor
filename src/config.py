@@ -156,6 +156,7 @@ class MonitorConfig:
     hardware_models: Dict[int, str] = field(default_factory=lambda: HARDWARE_MODELS.copy())
     filter_type: Optional[str] = None  # Filter to specific packet type
     filter_text: Optional[str] = None  # Filter messages containing text (grep-like)
+    hide_decode_errors: bool = False  # Hide messages that failed to decode
 
 
 class ConfigManager:
@@ -524,6 +525,8 @@ class ConfigManager:
             config.filter_type = args.filter_type
         if hasattr(args, "filter_text") and args.filter_text:
             config.filter_text = args.filter_text
+        if hasattr(args, "hide_decode_errors") and args.hide_decode_errors:
+            config.hide_decode_errors = args.hide_decode_errors
         
         return config
 
@@ -563,6 +566,9 @@ Examples:
   
   # Combine filters: only position messages containing "checkpoint"
   meshtastic-monitor --filter-type POSITION --filter-text checkpoint
+  
+  # Hide decode errors to reduce noise
+  meshtastic-monitor --hide-decode-errors
             """,
         )
         
@@ -691,6 +697,11 @@ Examples:
             type=str,
             metavar="TEXT",
             help="Only show messages containing specific text (case-insensitive grep-like filter)",
+        )
+        filter_group.add_argument(
+            "--hide-decode-errors",
+            action="store_true",
+            help="Hide messages that failed to decode (reduces noise from malformed packets)",
         )
         
         return parser

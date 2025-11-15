@@ -146,6 +146,10 @@ class MeshtasticMonitor:
             # Decode the message
             decoded_message = self.decoder.decode(topic, payload)
             
+            # Hide decode errors if configured
+            if self.config.hide_decode_errors and decoded_message.packet_type == "DECODE_ERROR":
+                return  # Skip decode errors
+            
             # Apply filters if configured
             if self.config.filter_type:
                 # Filter by packet type

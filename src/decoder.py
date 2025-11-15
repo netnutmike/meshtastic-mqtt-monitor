@@ -70,7 +70,13 @@ class MessageDecoder:
         try:
             # Parse ServiceEnvelope
             envelope = mqtt_pb2.ServiceEnvelope()
-            envelope.ParseFromString(payload)
+            try:
+                envelope.ParseFromString(payload)
+            except Exception as parse_error:
+                logger.error(f"Failed to parse ServiceEnvelope: {parse_error}")
+                logger.debug(f"Payload length: {len(payload)} bytes")
+                logger.debug(f"Payload (first 100 bytes): {payload[:100].hex()}")
+                raise ValueError(f"Error parsing message with type 'meshtastic.protobuf.ServiceEnvelope': {parse_error}")
             
             # Extract channel from topic (e.g., "msh/US/2/e/LongFast" -> "LongFast")
             channel = self._extract_channel_from_topic(mqtt_topic)
@@ -132,8 +138,9 @@ class MessageDecoder:
                 decryption_success=decryption_success,
             )
             
-        except Exception as e:
-            logger.error(f"Error decoding message: {e}")
+        except ValueError as e:
+            # Specific parsing error with more context
+            logger.warning(f"Message parsing error: {e}")
             return DecodedMessage(
                 packet_type="DECODE_ERROR",
                 channel=self._extract_channel_from_topic(mqtt_topic),
@@ -141,6 +148,19 @@ class MessageDecoder:
                 to_node="unknown",
                 timestamp=datetime.now(),
                 fields={"error": str(e)},
+                raw_data=payload,
+                decryption_success=False,
+                error=str(e),
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error decoding message: {e}", exc_info=True)
+            return DecodedMessage(
+                packet_type="DECODE_ERROR",
+                channel=self._extract_channel_from_topic(mqtt_topic),
+                from_node="unknown",
+                to_node="unknown",
+                timestamp=datetime.now(),
+                fields={"error": f"Unexpected error: {str(e)}"},
                 raw_data=payload,
                 decryption_success=False,
                 error=str(e),

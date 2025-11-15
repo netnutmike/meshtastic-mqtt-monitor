@@ -68,6 +68,24 @@ class MessageDecoder:
             DecodedMessage object with decoded information
         """
         try:
+            # Check if this is a status message (plain text on /stat/ topic)
+            if "/stat/" in mqtt_topic:
+                try:
+                    status_text = payload.decode('utf-8', errors='ignore')
+                    logger.debug(f"Status message on topic {mqtt_topic}: {status_text}")
+                    return DecodedMessage(
+                        packet_type="STATUS",
+                        channel=self._extract_channel_from_topic(mqtt_topic),
+                        from_node=mqtt_topic.split("/")[-1] if "/" in mqtt_topic else "unknown",
+                        to_node="broadcast",
+                        timestamp=datetime.now(),
+                        fields={"status": status_text},
+                        raw_data=payload,
+                        decryption_success=True,
+                    )
+                except:
+                    pass  # If decode fails, continue to protobuf parsing
+            
             # Check if payload is JSON (some MQTT messages are JSON, not protobuf)
             if payload.startswith(b'{') or payload.startswith(b'['):
                 logger.debug(f"Skipping JSON message on topic {mqtt_topic}")

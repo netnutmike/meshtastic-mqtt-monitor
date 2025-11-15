@@ -94,7 +94,18 @@ class MessageDecoder:
                     logger.debug(f"Parsing JSON message on topic {mqtt_topic}")
                     
                     # Extract common fields from JSON
-                    packet_type = json_data.get('type', 'UNKNOWN')
+                    raw_type = json_data.get('type', 'UNKNOWN')
+                    
+                    # Normalize JSON message types to standard packet types
+                    type_mapping = {
+                        'sendtext': 'TEXT_MESSAGE_APP',
+                        'text': 'TEXT_MESSAGE_APP',
+                        'position': 'POSITION',
+                        'nodeinfo': 'NODEINFO_APP',
+                        'telemetry': 'TELEMETRY_APP',
+                    }
+                    packet_type = type_mapping.get(raw_type.lower(), raw_type)
+                    
                     from_node = json_data.get('from', 'unknown')
                     to_node = json_data.get('to', 'unknown')
                     
@@ -214,9 +225,8 @@ class MessageDecoder:
             # Extract fields based on packet type
             fields = self._extract_fields(data_msg, packet_type)
             
-            # Add channel to fields so it can be used in display configurations
-            if 'channel' not in fields:
-                fields['channel'] = channel
+            # Don't add channel to fields since it's already shown in basic info
+            # This avoids duplication in the output
             
             # Build DecodedMessage
             return DecodedMessage(

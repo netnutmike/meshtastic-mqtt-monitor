@@ -1,6 +1,7 @@
 """Message decoder for Meshtastic MQTT Monitor."""
 
 import base64
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -88,17 +89,57 @@ class MessageDecoder:
             
             # Check if payload is JSON (some MQTT messages are JSON, not protobuf)
             if payload.startswith(b'{') or payload.startswith(b'['):
-                logger.debug(f"Skipping JSON message on topic {mqtt_topic}")
-                return DecodedMessage(
-                    packet_type="JSON_MESSAGE",
-                    channel=self._extract_channel_from_topic(mqtt_topic),
-                    from_node="unknown",
-                    to_node="unknown",
-                    timestamp=datetime.now(),
-                    fields={"note": "JSON messages not yet supported"},
-                    raw_data=payload,
-                    decryption_success=True,
-                )
+                try:
+                    json_data = json.loads(payload.decode('utf-8'))
+                    logger.debug(f"Parsing JSON message on topic {mqtt_topic}")
+                    
+                    # Extract common fields from JSON
+                    packet_type = json_data.get('type', 'UNKNOWN')
+                    from_node = json_data.get('from', 'unknown')
+                    to_node = json_data.get('to', 'unknown')
+                    
+                    # Convert from_node to hex format if it's a number
+                    if isinstance(from_node, int):
+                        from_node = f"!{from_node:08x}"
+                    if isinstance(to_node, int):
+                        to_node = f"!{to_node:08x}"
+                    
+                    # Extract payload fields
+                    fields = {}
+                    if 'payload' in json_data:
+                        payload_data = json_data['payload']
+                        if isinstance(payload_data, dict):
+                            fields = payload_data
+                        else:
+                            fields = {'payload': payload_data}
+                    
+                    # Add other top-level fields
+                    for key in ['channel', 'id', 'sender', 'timestamp']:
+                        if key in json_data and key not in fields:
+                            fields[key] = json_data[key]
+                    
+                    return DecodedMessage(
+                        packet_type=packet_type,
+                        channel=self._extract_channel_from_topic(mqtt_topic),
+                        from_node=from_node,
+                        to_node=to_node,
+                        timestamp=datetime.now(),
+                        fields=fields,
+                        raw_data=payload,
+                        decryption_success=True,
+                    )
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse JSON message: {e}")
+                    return DecodedMessage(
+                        packet_type="JSON_ERROR",
+                        channel=self._extract_channel_from_topic(mqtt_topic),
+                        from_node="unknown",
+                        to_node="unknown",
+                        timestamp=datetime.now(),
+                        fields={"error": f"Invalid JSON: {e}"},
+                        raw_data=payload,
+                        decryption_success=False,
+                    )
             
             # Try to parse as ServiceEnvelope first
             envelope = mqtt_pb2.ServiceEnvelope()
@@ -172,6 +213,10 @@ class MessageDecoder:
             
             # Extract fields based on packet type
             fields = self._extract_fields(data_msg, packet_type)
+            
+            # Add channel to fields so it can be used in display configurations
+            if 'channel' not in fields:
+                fields['channel'] = channel
             
             # Build DecodedMessage
             return DecodedMessage(

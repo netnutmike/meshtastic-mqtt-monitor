@@ -1,0 +1,251 @@
+# Meshtastic MQTT Monitor - Example Configuration File
+# 
+# This file demonstrates all available configuration options for the
+# Meshtastic MQTT Monitor application. Copy this file to config.yaml
+# and customize it for your needs.
+#
+# Configuration file format version
+version: "1.0"
+
+# ============================================================================
+# MQTT Broker Connection Settings
+# ============================================================================
+mqtt:
+  # MQTT broker hostname or IP address
+  # Default: mqtt.thevillages.com (public Meshtastic MQTT server)
+  host: "mqtt.thevillages.com"
+  
+  # MQTT broker port
+  # Default: 1883 (standard MQTT), 8883 (MQTT over TLS)
+  port: 1883
+  
+  # MQTT username for authentication
+  # Default: meshdev (public server username)
+  # Set to null if no authentication is required
+  username: "meshdev"
+  
+  # MQTT password for authentication
+  # Default: large4cats (public server password)
+  # Set to null if no authentication is required
+  password: "large4cats"
+  
+  # Enable TLS/SSL encryption for MQTT connection
+  # Default: false
+  # Set to true when connecting to port 8883 or when broker requires TLS
+  use_tls: false
+  
+  # Path to custom CA certificate file for TLS verification
+  # Default: null (uses system CA certificates)
+  # Only needed if broker uses self-signed certificate
+  ca_cert: null
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+monitoring:
+  # MQTT topic pattern to subscribe to
+  # Use MQTT wildcards: + (single level), # (multi-level)
+  # Examples:
+  #   - "msh/US/2/e/#"           - All messages in US region, channel 2
+  #   - "msh/+/+/+/#"            - All messages from all regions
+  #   - "msh/US/2/e/LongFast/#"  - Only LongFast channel messages
+  topic: "msh/US/2/e/#"
+  
+  # Filter to specific channels (optional)
+  # Set to null to monitor all channels, or provide a list of channel names
+  # Examples:
+  #   - null                     - Monitor all channels
+  #   - ["LongFast", "Primary"]  - Only monitor these channels
+  channels: null
+
+# ============================================================================
+# Encryption Configuration
+# ============================================================================
+# Configure encryption keys for channels that use encryption
+# Keys must be base64-encoded
+encryption:
+  channels:
+    # Example: Default LongFast channel (typically unencrypted or uses default key)
+    - name: "LongFast"
+      key: "AQ=="  # Base64 encoded key (this is the default key)
+    
+    # Example: Custom encrypted channel
+    - name: "Primary"
+      key: "1PG7OiApB3XvvX7g8kYzDYQD+CW+3Oi+Qs/LoIWh/gg="
+    
+    # Example: Another custom channel
+    - name: "SecureChannel"
+      key: "YourBase64EncodedKeyHere=="
+    
+    # Add more channels as needed
+    # To get your channel's encryption key:
+    # 1. Use the Meshtastic app or CLI
+    # 2. Navigate to channel settings
+    # 3. Copy the base64-encoded PSK (Pre-Shared Key)
+
+# ============================================================================
+# Display Field Configuration
+# ============================================================================
+# Customize which fields are displayed for each packet type
+# This allows you to focus on the information most relevant to your needs
+display:
+  fields:
+    # Position/Location packets
+    POSITION:
+      - latitude
+      - longitude
+      - altitude
+      - timestamp
+      # Other available fields: precision_bits, ground_speed, ground_track
+    
+    # Text message packets
+    TEXT_MESSAGE_APP:
+      - from
+      - to
+      - text
+      - timestamp
+      # Other available fields: channel, hop_limit
+    
+    # Device telemetry packets
+    TELEMETRY_APP:
+      - battery_level
+      - voltage
+      - temperature
+      - timestamp
+      # Other available fields: channel_utilization, air_util_tx, uptime_seconds
+    
+    # Node information packets
+    NODEINFO_APP:
+      - node_id
+      - long_name
+      - short_name
+      - hardware_model
+      # Other available fields: firmware_version, region, role
+    
+    # Routing packets (mesh routing information)
+    ROUTING_APP:
+      - from
+      - to
+      - hop_limit
+      - timestamp
+    
+    # Admin packets (device configuration)
+    ADMIN_APP:
+      - from
+      - to
+      - timestamp
+    
+    # Add custom field configurations for other packet types as needed
+    # Available packet types include:
+    # - WAYPOINT_APP
+    # - NEIGHBORINFO_APP
+    # - TRACEROUTE_APP
+    # - DETECTION_SENSOR_APP
+    # - REMOTE_HARDWARE_APP
+    # - REPLY_APP
+    # - STORE_FORWARD_APP
+
+# ============================================================================
+# Color Configuration
+# ============================================================================
+# Customize colors for packet types and keyword highlighting
+# This helps visually distinguish different message types in the console
+colors:
+  # Packet type colors
+  # Each packet type can have its own color for easy identification
+  # Available colors: black, red, green, yellow, blue, magenta, cyan, white
+  # Add "_bold" suffix for bold text (e.g., "red_bold")
+  packet_types:
+    POSITION: "green"
+    TEXT_MESSAGE_APP: "cyan"
+    TELEMETRY_APP: "yellow"
+    NODEINFO_APP: "blue"
+    ROUTING_APP: "magenta"
+    ADMIN_APP: "red"
+    WAYPOINT_APP: "green"
+    NEIGHBORINFO_APP: "blue"
+    TRACEROUTE_APP: "magenta"
+    DETECTION_SENSOR_APP: "yellow"
+    REMOTE_HARDWARE_APP: "cyan"
+    REPLY_APP: "white"
+    STORE_FORWARD_APP: "magenta"
+    # Default color for unknown packet types
+    default: "white"
+  
+  # Keyword highlighting
+  # Highlight specific keywords in message content with custom colors
+  # Useful for monitoring specific events, alerts, or important terms
+  keywords:
+    # Example: Highlight emergency-related terms in bold red
+    - keyword: "emergency"
+      case_sensitive: false
+      color: "red_bold"
+    
+    # Example: Highlight alert terms in bold yellow
+    - keyword: "alert"
+      case_sensitive: false
+      color: "yellow_bold"
+    
+    # Example: Highlight help requests in bold magenta
+    - keyword: "help"
+      case_sensitive: false
+      color: "magenta_bold"
+    
+    # Example: Case-sensitive keyword matching
+    - keyword: "URGENT"
+      case_sensitive: true
+      color: "red_bold"
+    
+    # Example: Highlight specific node names or callsigns
+    - keyword: "BaseStation"
+      case_sensitive: false
+      color: "cyan_bold"
+    
+    # Add more keyword highlights as needed
+    # Common use cases:
+    # - Emergency keywords: "sos", "mayday", "emergency"
+    # - Status keywords: "online", "offline", "battery low"
+    # - Location keywords: "checkpoint", "waypoint", "destination"
+    # - Custom callsigns or node names
+
+# ============================================================================
+# Configuration Tips
+# ============================================================================
+#
+# 1. MQTT Connection:
+#    - For public Meshtastic server, use the defaults shown above
+#    - For private servers, update host, port, username, and password
+#    - Enable use_tls: true for secure connections (usually port 8883)
+#
+# 2. Topic Patterns:
+#    - Start broad (e.g., "msh/#") then narrow down as needed
+#    - Use region codes: US, EU, etc.
+#    - Include channel numbers: 0, 1, 2, etc.
+#
+# 3. Encryption Keys:
+#    - Keys must be base64-encoded
+#    - Get keys from Meshtastic app or CLI
+#    - Default key "AQ==" is often used for public channels
+#    - Keep private keys secure and don't commit to version control
+#
+# 4. Display Fields:
+#    - Start with defaults, then customize based on your needs
+#    - Remove fields you don't need to reduce clutter
+#    - Add fields from protobuf definitions for advanced use
+#
+# 5. Colors:
+#    - Choose colors that work well with your terminal theme
+#    - Use bold variants for important packet types
+#    - Test colors in both light and dark terminal themes
+#
+# 6. Keywords:
+#    - Use case_sensitive: false for general matching
+#    - Use case_sensitive: true for specific terms (e.g., "URGENT")
+#    - Bold colors help keywords stand out
+#
+# 7. Command-Line Overrides:
+#    - All settings can be overridden via command-line arguments
+#    - Useful for testing without modifying config file
+#    - See --help for all available options
+#
+# ============================================================================

@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include DEVELOPER.md
+include config.example.yaml
+include pyproject.toml
+recursive-include src *.py
+recursive-include tests *.py

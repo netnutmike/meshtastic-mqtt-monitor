@@ -1,0 +1,46 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "description": "Auto-merge patch updates",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group all pytest-related dependencies",
+      "groupName": "pytest packages",
+      "matchPackagePatterns": ["^pytest"]
+    },
+    {
+      "description": "Group all code quality tools",
+      "groupName": "code quality tools",
+      "matchPackageNames": ["black", "flake8", "mypy"]
+    },
+    {
+      "description": "Group Meshtastic core dependencies",
+      "groupName": "meshtastic core",
+      "matchPackageNames": ["paho-mqtt", "meshtastic", "cryptography"]
+    },
+    {
+      "description": "Schedule updates to run weekly on Mondays",
+      "schedule": ["before 6am on Monday"]
+    }
+  ],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "rangeStrategy": "bump",
+  "python": {
+    "enabled": true
+  }
+}

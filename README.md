@@ -13,6 +13,35 @@ A Python-based command-line tool for monitoring, decoding, and displaying Meshta
 - **Flexible Configuration**: YAML configuration file with command-line overrides
 - **Multiple Packet Types**: Support for Position, Text Messages, Telemetry, Node Info, and more
 
+## Example Output
+
+```
+[2025-11-17 11:51:24] | [TEXT_MESSAGE_APP] | Channel: TheVillages | From: !a2ebd930 | text: "hello villages"
+[2025-11-17 11:51:26] | [POSITION] | Channel: LongFast | From: !16cd802c | latitude: 28.862054 | longitude: -81.972429 | altitude: 30
+[2025-11-17 11:51:26] | [POSITION] | Channel: LongFast | From: !16cd802c | To: !ffffffff | altitude: 30 | timestamp: 1763398286
+[2025-11-17 11:51:45] | [MAP_REPORT_APP] | Channel:  | From: !7c5ab850 | payload_size: 72 | payload_text: "
+sm-0 Steve's heltec v3, 6dBism-0 +*2.5.18.89ebafc0@M4U`h*"
+[2025-11-17 11:51:54] | [NODEINFO_APP] | Channel: LongFast | From: !433d2df8 | To: !caa16791 | node_id: "!433d2df8" | long_name: "Dispatcher" | short_name: "Hans" | hardware_model: 43 (TWC_MESH_V4)
+[2025-11-17 11:51:54] | [NODEINFO_APP] | Channel: LongFast | From: !433d2df8 | To: !caa16791 | role: 0
+[2025-11-17 11:53:13] | [TEXT_MESSAGE_APP] | Channel: TheVillages | From: !a2ebd930 | text: "hello villages"
+[2025-11-17 11:53:38] | [ENCRYPTED] | Channel: GolfCart | From: !5e55aa92 | status: "Unable to decrypt or decode"
+[2025-11-17 11:54:59] | [ENCRYPTED] | Channel: LongFast | From: !5a0f6f1d | status: "Unable to decrypt or decode"
+[2025-11-17 11:55:15] | [ENCRYPTED] | Channel: LongFast | From: !2e9acc5a | status: "Unable to decrypt or decode"
+[2025-11-17 11:55:22] | [ENCRYPTED] | Channel: LongFast | From: !7a6d7944 | status: "Unable to decrypt or decode"
+[2025-11-17 11:55:50] | [TRACEROUTE_APP] | Channel: LongFast | From: !7c5ccbd0 | To: !21ad7a1c
+[2025-11-17 11:55:50] | [] | Channel: LongFast | From: !7c5ccbd0 | To: !21ad7a1c | channel: 0 | id: 4086964994 | sender: "!433d2df8" | timestamp: 1763398470
+[2025-11-17 11:56:12] | [POSITION] | Channel: LongFast | From: !da63b944 | latitude: 28.852224 | longitude: -82.001920 | altitude: 23
+[2025-11-17 11:56:12] | [POSITION] | Channel: LongFast | From: !da63b944 | To: !ffffffff | altitude: 23 | timestamp: 1763398571
+[2025-11-17 11:56:39] | [ENCRYPTED] | Channel: LongFast | From: !a2ebd930 | To: !33665f5c | status: "Unable to decrypt or decode"
+[2025-11-17 11:56:41] | [NODEINFO_APP] | Channel: LongFast | From: !a2ebd930 | To: !33665f5c | node_id: "!a2ebd930" | long_name: "K3DO FL GW 🛰" | short_name: "🛰" | hardware_model: 31 (PICOMPUTER_S3)
+[2025-11-17 11:56:41] | [NODEINFO_APP] | Channel: LongFast | From: !a2ebd930 | To: !33665f5c | role: 0
+[2025-11-17 11:58:08] | [POSITION] | Channel: LongFast | From: !433d2df8 | latitude: 42.952294 | longitude: -70.791987 | altitude: 10
+[2025-11-17 11:58:08] | [POSITION] | Channel: LongFast | From: !433d2df8 | To: !ffffffff | altitude: 10 | timestamp: 1763398608
+[2025-11-17 11:58:11] | [POSITION] | Channel: LongFast | From: !433d2df8 | latitude: 42.952294 | longitude: -70.791987 | altitude: 10
+[2025-11-17 11:58:11] | [POSITION] | Channel: LongFast | From: !433d2df8 | To: !ffffffff | altitude: 10 | timestamp: 1763398611
+[2025-11-17 11:58:41] | [ENCRYPTED] | Channel: GolfCart | From: !5e55aa92 | status: "Unable to decrypt or decode"
+[2025-11-17 12:00:14] | [ENCRYPTED] | Channel: GolfCart | From: !da63b944 | status: "Unable to decrypt or decode"
+```
 ## Installation
 
 ### Prerequisites
